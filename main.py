@@ -1,11 +1,27 @@
 
-OPCODES = 'ADD AND NOT OR LDR STR HALT LDI STI BRz BR BRn BRp'.split(' ')
+'''
+CONSTANTS
 
+Just constant variables
+'''
+OPCODES = 'ADD AND NOT OR LDR STR HALT LDI STI BRz BR BRn BRp'.split(' ')
+LABELS = []
+
+'''
+TOKENS
+
+This is just the token objects.
+'''
 class TokenType():
     LABEL = 0
     OPCODE = 1
     OPERANDS = 2
 
+'''
+LEXER
+
+This turns the text into tokens
+'''
 class Lexer():
     def __init__(self: 'Lexer', text: str) -> None:
         self.set_text(text)
@@ -26,12 +42,17 @@ class Lexer():
         while not self.current_character.isspace() and not self.current_character == '':
             iden += self.current_character
             self.advance()
-        
-        if iden.upper() in OPCODES:
+    
+        if iden in OPCODES:
             return (TokenType.OPCODE, iden)
         elif ',' in iden:
             return (TokenType.OPERANDS, iden)
-        return (TokenType.LABEL, iden)
+
+        if iden in LABELS:
+            return None, 'Label already taken!'
+        
+        LABELS.append(iden)
+        return (TokenType.LABEL, iden), None
     
     def lex(self: 'Lexer') -> list[(int, str)]:
         tokens = []
@@ -39,7 +60,10 @@ class Lexer():
             if self.current_character.isspace():
                 continue
             elif self.current_character in 'abcdefghijklmnopqrstuvwxyz'.upper():
-                tokens.append(self.build_identifier())
+                tkn, error = self.build_identifier()
+                if error:
+                    return None, error
+                tokens.append(tkn)
             elif self.current_character == ';':
                 break
             else:
@@ -48,6 +72,33 @@ class Lexer():
             self.advance()
         return tokens, None
 
+'''
+PARSER OBJECT
+
+This is a line of code from the parser that the interpreter can run.
+'''
+class ParserObject():
+    def __init__(self: 'ParserObject', tokens: list[(int, str)]) -> None:
+        self.tokens = tokens
+
+        self.load_commands()
+    
+    def load_commands(self: 'ParserObject') -> None:
+        pass
+
+'''
+PARSER
+
+This will make the syntax correct.
+'''
+class Parser():
+    pass
+
+'''
+MAIN
+
+Run the program.
+'''
 def main() -> None:
     l = Lexer(input('$ '))
 
@@ -55,5 +106,10 @@ def main() -> None:
     if error is not None:
         raise Exception(error)
 
+'''
+AAAAAAA
+
+Fun Python syntax
+'''
 if __name__ == '__main__':
     main()
