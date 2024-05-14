@@ -57,9 +57,9 @@ class Lexer():
             return None, 'Commas cannot be followed by spaces!'
     
         # Make sure to return the correct type
-        if iden in OPCODES:
+        if iden in OPCODES and not iden[0] in 'xb#':
             return (TokenType.OPCODE, iden), None
-        elif ',' in iden:
+        elif ',' in iden or iden[0] in 'xb#':
             return (TokenType.OPERANDS, iden), None
 
         # If it is a label that is taken
@@ -82,7 +82,7 @@ class Lexer():
                 continue
 
             # If it is a letter, build an identifier
-            elif self.current_character in 'abcdefghijklmnopqrstuvwxyz'.upper():
+            elif self.current_character in 'abcdefghijklmnopqrstuvwxyz'.upper() + 'abcdefghijklmnopqrstuvwxyz':
                 tkn, error = self.build_identifier()
                 if error:
                     return None, error
@@ -165,10 +165,13 @@ class ParserObject():
         err = None
 
         # For each token
-        for token in self.tokens:
+        for i, token in enumerate(self.tokens):
 
             # Set the correct value
             if token[0] == TokenType.LABEL:
+                if i != 0:
+                    err = 'Labels must come first!'
+                    break
                 if not label:
                     label = token[1]
                 else:
@@ -193,6 +196,12 @@ class ParserObject():
         self.command = command
         self.args = args
         self.error = err
+
+        # Other errors
+        if not err:
+            if command == '':
+                err = 'You need a command!'
+                self.error = err
     
     # For debugging
     def __repr__(self: 'ParserObject') -> str:
