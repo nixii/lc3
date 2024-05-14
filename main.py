@@ -212,13 +212,22 @@ class Parser():
     # Set the tokens for the parser
     def set_tokens(self: 'Parser', tokens: list[(int, str)]) -> None:
         self.tokens = tokens
-    
+
     # Parse the line
     def parse(self: 'Parser') -> ParserObject:
         po = ParserObject(self.tokens)
         if po.error:
             return None, po.error
         return po, None
+
+'''
+INTERPRETER
+
+This will interpret the entire program.
+'''
+class Interpreter():
+    def __init__(self: 'Interpreter', parser_object: ParserObject) -> None:
+        self.parser_object = parser_object
 
 '''
 MAIN
