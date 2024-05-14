@@ -238,6 +238,9 @@ class Interpreter():
     def __init__(self: 'Interpreter', parser_object: ParserObject) -> None:
         self.parser_object = parser_object
 
+    def set_parser_object(self: 'Interpreter', parser_object: ParserObject) -> None:
+        self.parser_object = parser_object
+
 '''
 MAIN
 
@@ -261,6 +264,7 @@ def main() -> None:
     print(repr(po))
 
     # Interpreterification
+    i = Interpreter(po)
 
 '''
 AAAAAAA
