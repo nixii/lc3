@@ -138,11 +138,11 @@ class ParserObject():
                 args.append((ParserArgType.NUMBER, int('0' + arg, 16)))
 
             # Decimal numbers
-            if arg[0] == '#':
+            elif arg[0] == '#':
                 args.append((ParserArgType.NUMBER, int(arg[1:])))
             
             # Binary numbers
-            if arg[0] == 'b':
+            elif arg[0] == 'b':
                 args.append((ParserArgType.NUMBER, int('0' + arg, 2)))
             
             # Registers
