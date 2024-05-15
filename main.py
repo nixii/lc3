@@ -230,6 +230,35 @@ class Parser():
         return po, None
 
 '''
+GLOBAL ENVIRONMENT
+
+The environment that the program runs in
+'''
+class ProgramEnvironment():
+    def __init__(self: 'ProgramEnvironment') -> None:
+        self.registers = {
+            f'R{i}' for i in range(10)
+        }
+        self.memory = {
+
+        }
+    
+    def get_register(self: 'ProgramEnvironment', register_id: int) -> tuple[int|None, str|None]:
+        val = self.registers.get(f'R{register_id}', None)
+        return val, 'Register doesn\'t exist!' if val is None else None
+    def set_register(self: 'ProgramEnvironment', register_id: int, register_value: int) -> str|None:
+        if not self.registers.get(f'R{register_id}'):
+            return 'Register doesn\'t exist!'
+        self.registers.set(f'R{register_id}', register_value)
+        return None
+    
+    def get_memory(self: 'ProgramEnvironment', address: int) -> int:
+        val = self.memory.get(str(address))
+        return val or 0x0000
+    def set_memory(self: 'ProgramEnvironment', address: int, val: int) -> None:
+        self.memory.set(str(address), val)
+
+'''
 INTERPRETER
 
 This will interpret the entire program.
@@ -240,6 +269,9 @@ class Interpreter():
 
     def set_parser_object(self: 'Interpreter', parser_object: ParserObject) -> None:
         self.parser_object = parser_object
+    
+    def interpret(self: 'Interpreter') -> None:
+        pass
 
 '''
 MAIN
