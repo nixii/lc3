@@ -79,7 +79,7 @@ class Lexer():
     # Lex the text
     def lex(self: 'Lexer') -> list[(int, str)]:
         tokens = []
-        if self.text[0] == ';':
+        if len(self.text) == 0 or self.text[0] == ';' or self.text[0] == '\n':
             return [], None
 
         # While there is a character
