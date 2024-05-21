@@ -1,6 +1,4 @@
-ADD R6,#10,R6 ; Add 10 to R6
 
-ADD R2,#3,R2  ; Add 3 to R2
-
-ADD R6,R2,R6  ; Add R6 and R2
-; At the end, R6 is 13.
+ADD R0,#505,R0
+NOT R0,R0
+ADD R0,#1,R0

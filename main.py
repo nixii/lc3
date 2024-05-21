@@ -322,7 +322,7 @@ class Interpreter():
     def command_NOT(self: 'Interpreter') -> None:
         arg_0 = self.parser_object.args[0]
         arg_1 = self.parser_object.args[1]
-        val = -self.env.get_value_of(arg_0)
+        val = ~self.env.get_value_of(arg_0)
         if arg_1[0] != ParserArgType.REGISTER:
             raise Exception('Expected a register to return the value into.')
         err = self.env.set_register(arg_1[1], val)
@@ -332,13 +332,13 @@ class Interpreter():
     def command_SUB(self: 'Interpreter') -> None:
         self.command_ADD(-1)
     
-    def interpret(self: 'Interpreter') -> None:
+    def interpret(self: 'Interpreter') -> int|None:
         if self.parser_object.command == '':
             return
-        getattr(self, f'command_{self.parser_object.command}', 'command_void')()
+        return getattr(self, f'command_{self.parser_object.command}', 'command_void')()
     
-    def register(self: 'Interpreter') -> None:
-        pass
+    def register(self: 'Interpreter', line: ParserObject) -> None:
+        self.env.add_line(line)
 
 '''
 MAIN
@@ -359,23 +359,16 @@ def reg_run(t: str, l: Lexer, p: Parser, i: Interpreter) -> None:
         raise Exception(error)
     
     # Interpreterification
-    i.register()
+    i.register(po)
 
-def run(t: str, l: Lexer, p: Parser, i: Interpreter) -> None:
-    l.set_text(t)
-    tokens, error = l.lex()
-    if error is not None:
-        raise Exception(error)
-    
-    # Parserification
-    p.set_tokens(tokens)
-    po, error = p.parse()
-    if error is not None:
-        raise Exception(error)
-
-    # Interpreterification
-    i.set_parser_object(po)
-    i.interpret()
+def run(l: Lexer, p: Parser, i: Interpreter) -> None:
+    j = 0
+    while j < len(i.env.lines):
+        line = i.env.lines[j]
+        i.set_parser_object(line)
+        res = i.interpret()
+        j = j if res is None else res
+        j += 1
 
 def main() -> None:
 
@@ -387,15 +380,10 @@ def main() -> None:
     if len(sys.argv) > 1:
         with open(sys.argv[1], 'r') as f:
             lines = list(map(lambda x: x.replace('\n', ''), f.readlines()))
+            lines = filter(lambda x: x != '' and not x.isspace() and x != '\n' and x[0] != ';', lines)
             for line in lines:
                 reg_run(line, l, p, i)
-            for line in lines:
-                run(line, l, p, i)
-    else:
-        while True:
-            t = input('$ ')
-            if t == 'q': break
-            run(t, l, p, i)
+            run(l, p, i)
     print(i.env.registers)
 
 '''
