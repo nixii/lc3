@@ -79,6 +79,8 @@ class Lexer():
     # Lex the text
     def lex(self: 'Lexer') -> list[(int, str)]:
         tokens = []
+        if self.text[0] == ';':
+            return [], None
 
         # While there is a character
         while self.current_character != '':
@@ -206,7 +208,7 @@ class ParserObject():
 
         # Other errors
         if not err:
-            if command == '':
+            if command == '' and len(self.tokens) != 0:
                 err = 'You need a command!'
                 self.error = err
     
@@ -303,6 +305,8 @@ class Interpreter():
             raise Exception(err)
     
     def interpret(self: 'Interpreter') -> None:
+        if self.parser_object.command == '':
+            return
         getattr(self, f'command_{self.parser_object.command}', 'command_void')()
 
 '''
@@ -342,6 +346,7 @@ def main() -> None:
     else:
         while True:
             run(input('$ '), l, p, i)
+    print(i.env.registers)
 
 '''
 AAAAAAA
