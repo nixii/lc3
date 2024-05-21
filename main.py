@@ -192,7 +192,11 @@ class ParserObject():
             # Set the correct value
             if token[0] == TokenType.LABEL:
                 if i != 0:
-                    continue
+                    if command != '':
+                        args.append((ParserArgType.LABEL, token[1]))
+                    else:
+                        err = 'Cannot set the label late!'
+                        break
                 if not label:
                     label = token[1]
                 else:
@@ -205,7 +209,8 @@ class ParserObject():
                     err = 'Cannot set a command twice in one line!'
                     break
             elif token[0] == TokenType.OPERANDS:
-                if not args:
+                print(args)
+                if len(args) == 0 or len(args) == 1:
                     str_args = token[1].split(',')
                     _args, err = self.clean_args(str_args)
                     if not err:
