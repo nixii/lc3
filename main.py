@@ -10,7 +10,7 @@ CONSTANTS
 
 Just constant variables
 '''
-OPCODES = 'ADD AND NOT OR LDR STR HALT LDI STI BRz BR BRn BRp'.split(' ')
+OPCODES = 'ADD SUB AND NOT OR LDR STR HALT LDI STI BRz BR BRn BRp'.split(' ')
 LABELS = []
 
 '''
@@ -292,17 +292,30 @@ class Interpreter():
     def command_void(self: 'Interpreter') -> None:
         raise Exception('Unknown command!')
 
-    def command_ADD(self: 'Interpreter') -> None:
+    def command_ADD(self: 'Interpreter', sign: int = 1) -> None:
         arg_0 = self.parser_object.args[0]
         arg_1 = self.parser_object.args[1]
         arg_2 = self.parser_object.args[2]
         val = self.env.get_value_of(arg_0)
-        val += self.env.get_value_of(arg_1)
+        val += self.env.get_value_of(arg_1) * sign
         if arg_2[0] != ParserArgType.REGISTER:
-            raise Exception('Expected a register to return the value into')
+            raise Exception('Expected a register to return the value into.')
         err = self.env.set_register(arg_2[1], val)
         if err:
             raise Exception(err)
+    
+    def command_NOT(self: 'Interpreter') -> None:
+        arg_0 = self.parser_object.args[0]
+        arg_1 = self.parser_object.args[1]
+        val = -self.env.get_value_of(arg_0)
+        if arg_1[0] != ParserArgType.REGISTER:
+            raise Exception('Expected a register to return the value into.')
+        err = self.env.set_register(arg_1[1], val)
+        if err:
+            raise Exception(err)
+        
+    def command_SUB(self: 'Interpreter') -> None:
+        self.command_ADD(-1)
     
     def interpret(self: 'Interpreter') -> None:
         if self.parser_object.command == '':
@@ -345,7 +358,9 @@ def main() -> None:
                 run(line, l, p, i)
     else:
         while True:
-            run(input('$ '), l, p, i)
+            t = input('$ ')
+            if t == 'q': break
+            run(t, l, p, i)
     print(i.env.registers)
 
 '''
