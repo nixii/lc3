@@ -30,6 +30,7 @@ class TokenType():
     LABEL = 0
     OPCODE = 1
     OPERANDS = 2
+    LABEL_REF = 3
 
 '''
 LEXER
@@ -73,7 +74,7 @@ class Lexer():
         # Make sure to return the correct type
         if iden in OPCODES and not iden[0] in 'xb#':
             return (TokenType.OPCODE, iden), None
-        elif ',' in iden or iden[0] in 'Rxb#':
+        elif ',' in iden or iden[0] in 'Rxb#' or iden in LABELS or self.pos <= len(iden):
             return (TokenType.OPERANDS, iden), None
 
         # If it is a label that is taken
@@ -128,6 +129,7 @@ class ParserArgType():
     NUMBER = 0
     REGISTER = 1
     ADDRESS = 2
+    LABEL = 3
 
 '''
 PARSER OBJECT
@@ -168,7 +170,10 @@ class ParserObject():
             
             # Errors
             else:
-                return None, f'Invalid operand type "{arg[0]}".'
+                if arg in LABELS:
+                    args.append((ParserArgType.LABEL, arg))
+                # else:
+                #     return None, f'Invalid operand type "{arg[0]}".'
 
         # Return the args
         return args, None
@@ -187,8 +192,7 @@ class ParserObject():
             # Set the correct value
             if token[0] == TokenType.LABEL:
                 if i != 0:
-                    err = 'Labels must come first!'
-                    break
+                    continue
                 if not label:
                     label = token[1]
                 else:
@@ -203,7 +207,9 @@ class ParserObject():
             elif token[0] == TokenType.OPERANDS:
                 if not args:
                     str_args = token[1].split(',')
-                    args, err = self.clean_args(str_args)
+                    _args, err = self.clean_args(str_args)
+                    if not err:
+                        args += _args
                 else:
                     err = 'Operands cannot come in two groups!'
                     break
@@ -261,6 +267,7 @@ class ProgramEnvironment():
         }
         self.lines = []
         self.labels = {}
+        self.last_value = 0
     
     def get_register(self: 'ProgramEnvironment', register_id: int) -> tuple[int|None, str|None]:
         val = self.registers.get(f'R{register_id}', None)
@@ -318,6 +325,7 @@ class Interpreter():
         err = self.env.set_register(arg_2[1], val)
         if err:
             raise Exception(err)
+        self.env.last_value = val
     
     def command_NOT(self: 'Interpreter') -> None:
         arg_0 = self.parser_object.args[0]
@@ -328,6 +336,24 @@ class Interpreter():
         err = self.env.set_register(arg_1[1], val)
         if err:
             raise Exception(err)
+        self.env.last_value = val
+    
+    def command_BR(self: 'Interpreter') -> int:
+        arg_0 = self.parser_object.args[0]
+        if arg_0[0] != ParserArgType.LABEL or not arg_0[1] in LABELS:
+            raise Exception('Expected a label to go to!')
+        return self.env.labels[arg_0[1]]
+    
+    def command_BRp(self: 'Interpreter') -> int|None:
+        if self.env.last_value > 0:
+            return self.command_BR()
+    def command_BRn(self: 'Interpreter') -> int|None:
+        if self.env.last_value < 0:
+            return self.command_BR()
+    def command_BRz(self: 'Interpreter') -> int|None:
+        print(self.env.last_value)
+        if self.env.last_value == 0:
+            return self.command_BR()
         
     def command_SUB(self: 'Interpreter') -> None:
         self.command_ADD(-1)
@@ -357,6 +383,7 @@ def reg_run(t: str, l: Lexer, p: Parser, i: Interpreter) -> None:
     po, error = p.parse()
     if error is not None:
         raise Exception(error)
+    print(po)
     
     # Interpreterification
     i.register(po)
