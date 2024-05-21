@@ -10,7 +10,15 @@ CONSTANTS
 
 Just constant variables
 '''
-OPCODES = 'ADD SUB AND NOT OR LDR STR HALT LDI STI BRz BR BRn BRp'.split(' ')
+OPCODES = 'ADD SUB AND NOT OR LDR STR LDI STI BRz BR BRn BRp TRAP HALT IN OUT GETC PUTS .ORIG .END .BLKW .FILL .STRINGZ'.split(' ')
+TRAPCODES = {
+    'HALT': 0x25,
+    'IN': 0x23,
+    'OUT': 0x21,
+    'GETC': 0x20,
+    'PUTS': 0x22
+}
+TRAPCODE_LIST = list(TRAPCODES.keys())
 LABELS = []
 
 '''
@@ -251,6 +259,8 @@ class ProgramEnvironment():
         self.memory = {
 
         }
+        self.lines = []
+        self.labels = {}
     
     def get_register(self: 'ProgramEnvironment', register_id: int) -> tuple[int|None, str|None]:
         val = self.registers.get(f'R{register_id}', None)
@@ -275,6 +285,11 @@ class ProgramEnvironment():
             if err: raise Exception(err)
             return val
         return 0
+
+    def add_line(self: 'ProgramEnvironment', line: ParserObject) -> None:
+        self.lines.append(line)
+        if line.label:
+            self.labels[line.label] = len(self.lines) - 1
 
 '''
 INTERPRETER
@@ -321,12 +336,30 @@ class Interpreter():
         if self.parser_object.command == '':
             return
         getattr(self, f'command_{self.parser_object.command}', 'command_void')()
+    
+    def register(self: 'Interpreter') -> None:
+        pass
 
 '''
 MAIN
 
 Run the program.
 '''
+
+def reg_run(t: str, l: Lexer, p: Parser, i: Interpreter) -> None:
+    l.set_text(t)
+    tokens, error = l.lex()
+    if error is not None:
+        raise Exception(error)
+    
+    # Parserification
+    p.set_tokens(tokens)
+    po, error = p.parse()
+    if error is not None:
+        raise Exception(error)
+    
+    # Interpreterification
+    i.register()
 
 def run(t: str, l: Lexer, p: Parser, i: Interpreter) -> None:
     l.set_text(t)
@@ -355,6 +388,8 @@ def main() -> None:
         with open(sys.argv[1], 'r') as f:
             lines = list(map(lambda x: x.replace('\n', ''), f.readlines()))
             for line in lines:
+                reg_run(line, l, p, i)
+            for line in lines:
                 run(line, l, p, i)
     else:
         while True:
@@ -364,7 +399,7 @@ def main() -> None:
     print(i.env.registers)
 
 '''
-AAAAAAA
+RUN
 
 Fun Python syntax
 '''
