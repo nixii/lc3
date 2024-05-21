@@ -1,3 +1,9 @@
+'''
+IMPORTS
+
+Some libraries I need
+'''
+import sys
 
 '''
 CONSTANTS
@@ -59,7 +65,7 @@ class Lexer():
         # Make sure to return the correct type
         if iden in OPCODES and not iden[0] in 'xb#':
             return (TokenType.OPCODE, iden), None
-        elif ',' in iden or iden[0] in 'xb#':
+        elif ',' in iden or iden[0] in 'Rxb#':
             return (TokenType.OPERANDS, iden), None
 
         # If it is a label that is taken
@@ -79,6 +85,7 @@ class Lexer():
 
             # Ignore spaces
             if self.current_character.isspace():
+                self.advance()
                 continue
 
             # If it is a letter, build an identifier
@@ -237,7 +244,7 @@ The environment that the program runs in
 class ProgramEnvironment():
     def __init__(self: 'ProgramEnvironment') -> None:
         self.registers = {
-            f'R{i}' for i in range(10)
+            f'R{i}': 0 for i in range(10)
         }
         self.memory = {
 
@@ -247,9 +254,9 @@ class ProgramEnvironment():
         val = self.registers.get(f'R{register_id}', None)
         return val, 'Register doesn\'t exist!' if val is None else None
     def set_register(self: 'ProgramEnvironment', register_id: int, register_value: int) -> str|None:
-        if not self.registers.get(f'R{register_id}'):
+        if self.registers.get(f'R{register_id}', None) == None:
             return 'Register doesn\'t exist!'
-        self.registers.set(f'R{register_id}', register_value)
+        self.registers[f'R{register_id}'] = register_value
         return None
     
     def get_memory(self: 'ProgramEnvironment', address: int) -> int:
@@ -257,6 +264,15 @@ class ProgramEnvironment():
         return val or 0x0000
     def set_memory(self: 'ProgramEnvironment', address: int, val: int) -> None:
         self.memory.set(str(address), val)
+    
+    def get_value_of(self: 'ProgramEnvironment', o: tuple[int, str]) -> int:
+        if o[0] == ParserArgType.NUMBER:
+            return int(o[1])
+        elif o[0] == ParserArgType.REGISTER:
+            val, err = self.get_register(int(o[1]))
+            if err: raise Exception(err)
+            return val
+        return 0
 
 '''
 INTERPRETER
@@ -266,37 +282,68 @@ This will interpret the entire program.
 class Interpreter():
     def __init__(self: 'Interpreter', parser_object: ParserObject) -> None:
         self.parser_object = parser_object
+        self.env = ProgramEnvironment()
 
     def set_parser_object(self: 'Interpreter', parser_object: ParserObject) -> None:
         self.parser_object = parser_object
+
+    def command_void(self: 'Interpreter') -> None:
+        raise Exception('Unknown command!')
+
+    def command_ADD(self: 'Interpreter') -> None:
+        arg_0 = self.parser_object.args[0]
+        arg_1 = self.parser_object.args[1]
+        arg_2 = self.parser_object.args[2]
+        val = self.env.get_value_of(arg_0)
+        val += self.env.get_value_of(arg_1)
+        if arg_2[0] != ParserArgType.REGISTER:
+            raise Exception('Expected a register to return the value into')
+        err = self.env.set_register(arg_2[1], val)
+        if err:
+            raise Exception(err)
     
     def interpret(self: 'Interpreter') -> None:
-        pass
+        getattr(self, f'command_{self.parser_object.command}', 'command_void')()
 
 '''
 MAIN
 
 Run the program.
 '''
-def main() -> None:
 
-    # Lexerification
-    l = Lexer(input('$ '))
-
+def run(t: str, l: Lexer, p: Parser, i: Interpreter) -> None:
+    l.set_text(t)
     tokens, error = l.lex()
     if error is not None:
         raise Exception(error)
     
     # Parserification
-    p = Parser(tokens)
-
+    p.set_tokens(tokens)
     po, error = p.parse()
     if error is not None:
         raise Exception(error)
-    print(repr(po))
 
     # Interpreterification
-    i = Interpreter(po)
+    i.set_parser_object(po)
+    i.interpret()
+
+def main() -> None:
+
+    # Lexerification
+    l = Lexer('')
+    p = Parser(None)
+    i = Interpreter(None)
+
+    if len(sys.argv) > 1:
+        with open(sys.argv[1], 'r') as f:
+            lines = list(map(lambda x: x.replace('\n', ''), f.readlines()))
+            for line in lines:
+                run(line, l, p, i)
+    else:
+        while True:
+            run(input('$ '), l, p, i)
+
+    
 
 '''
 AAAAAAA
