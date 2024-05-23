@@ -74,7 +74,7 @@ class Lexer():
         # Make sure to return the correct type
         if iden in OPCODES and not iden[0] in 'xb#':
             return (TokenType.OPCODE, iden), None
-        elif ',' in iden or iden[0] in 'Rxb#' or iden in LABELS or self.pos <= len(iden):
+        elif ',' in iden or iden[0] in 'Rxb#' or iden in LABELS or self.pos > len(iden):
             return (TokenType.OPERANDS, iden), None
 
         # If it is a label that is taken
@@ -144,92 +144,18 @@ class ParserObject():
 
         self.load_commands()
     
-    # Clean the args into a usable format
-    @staticmethod
-    def clean_args(str_args: list[str]) -> list[(int, str|int)]:
-        args = []
-
-        # For each argument
-        for arg in str_args:
-
-            # Hex numbers
-            if arg[0] == 'x':
-                args.append((ParserArgType.NUMBER, int('0' + arg, 16)))
-
-            # Decimal numbers
-            elif arg[0] == '#':
-                args.append((ParserArgType.NUMBER, int(arg[1:])))
-            
-            # Binary numbers
-            elif arg[0] == 'b':
-                args.append((ParserArgType.NUMBER, int('0' + arg, 2)))
-            
-            # Registers
-            elif arg[0] == 'R':
-                args.append((ParserArgType.REGISTER, arg[1:]))
-            
-            # Errors
-            else:
-                if arg in LABELS:
-                    args.append((ParserArgType.LABEL, arg))
-                # else:
-                #     return None, f'Invalid operand type "{arg[0]}".'
-
-        # Return the args
-        return args, None
-    
     def load_commands(self: 'ParserObject') -> None:
 
         # Get defaults
-        label = ''
-        command = ''
-        args = []
+        label = None
+        command = None
+        args = None
         err = None
 
         # For each token
-        for i, token in enumerate(self.tokens):
-
-            # Set the correct value
-            if token[0] == TokenType.LABEL:
-                if i != 0:
-                    if command != '':
-                        args.append((ParserArgType.LABEL, token[1]))
-                    else:
-                        err = 'Cannot set the label late!'
-                        break
-                if not label:
-                    label = token[1]
-                else:
-                    err = 'Cannot set a label twice in one line!'
-                    break
-            elif token[0] == TokenType.OPCODE:
-                if not command:
-                    command = token[1]
-                else:
-                    err = 'Cannot set a command twice in one line!'
-                    break
-            elif token[0] == TokenType.OPERANDS:
-                print(args)
-                if len(args) == 0 or len(args) == 1:
-                    str_args = token[1].split(',')
-                    _args, err = self.clean_args(str_args)
-                    if not err:
-                        args += _args
-                else:
-                    err = 'Operands cannot come in two groups!'
-                    break
-            
-        # Set all the values
-        self.label = label
-        self.command = command
-        self.args = args
-        self.error = err
-
-        # Other errors
-        if not err:
-            if command == '' and len(self.tokens) != 0:
-                err = 'You need a command!'
-                self.error = err
+        print(self.tokens)
+        for token in self.tokens:
+            pass # TODO: Rewrite parser
     
     # For debugging
     def __repr__(self: 'ParserObject') -> str:
