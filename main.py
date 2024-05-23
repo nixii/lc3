@@ -177,7 +177,6 @@ class ParserObject():
         # For each token
         print(self.tokens)
         for token in self.tokens:
-            # TODO : Rewrite parser
             # TODO : Make the errors descriptive
 
             match token[0]:
@@ -332,7 +331,7 @@ class Interpreter():
         if self.env.last_value < 0:
             return self.command_BR()
     def command_BRz(self: 'Interpreter') -> int|None:
-        print(self.env.last_value)
+        # print(self.env.last_value)
         if self.env.last_value == 0:
             return self.command_BR()
         
@@ -391,6 +390,7 @@ def main() -> None:
             lines = filter(lambda x: x != '' and not x.isspace() and x != '\n' and x[0] != ';', lines)
             for line in lines:
                 reg_run(line, l, p, i)
+            print(i.env.lines)
             run(l, p, i)
     print(i.env.registers)
 
