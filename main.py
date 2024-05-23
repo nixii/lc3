@@ -144,22 +144,72 @@ class ParserObject():
 
         self.load_commands()
     
+    @staticmethod
+    def load_operands(operands_token: tuple[int, str]) -> list[tuple[int, str|int]]:
+        operands = []
+
+        onames = operands_token[1].split(',')
+
+        for operand in onames:
+            match operand[0]:
+                case 'R':
+                    operands.append((ParserArgType.REGISTER, operand[1:]))
+                case 'x':
+                    operands.append((ParserArgType.NUMBER, int(operand, 16)))
+                case 'b':
+                    operands.append((ParserArgType.NUMBER, int(operand, 2)))
+                case '#':
+                    operands.append((ParserArgType.NUMBER, int(operand[1:], 10)))
+                case _:
+                    if operand in LABELS:
+                        operands.append((ParserArgType.LABEL, operand))
+        
+        return operands
+    
     def load_commands(self: 'ParserObject') -> None:
 
         # Get defaults
         label = None
-        command = None
-        args = None
+        opcode = None
+        operands = None
         err = None
 
         # For each token
         print(self.tokens)
         for token in self.tokens:
-            pass # TODO: Rewrite parser
+            # TODO : Rewrite parser
+            # TODO : Make the errors descriptive
+
+            match token[0]:
+                case TokenType.LABEL:
+                    if label:
+                        err = 'There was an error!'
+                        break
+                    else:
+                        label = token[1]
+                    
+                case TokenType.OPCODE:
+                    if opcode:
+                        err = 'There was an error!'
+                        break
+                    else:
+                        opcode = token[1]
+                
+                case TokenType.OPERANDS:
+                    if operands:
+                        err = 'There was an error!'
+                        break
+                    else:
+                        operands = self.load_operands(token)
+        
+        self.label = label
+        self.opcode = opcode
+        self.operands = operands
+        self.error = err
     
     # For debugging
     def __repr__(self: 'ParserObject') -> str:
-        return f'Label: {self.label}; Opcode: {self.command}; Operands: {self.args};'
+        return f'Label: {self.label}; Opcode: {self.opcode}; Operands: {self.operands};'
 
 '''
 PARSER
@@ -246,9 +296,9 @@ class Interpreter():
         raise Exception('Unknown command!')
 
     def command_ADD(self: 'Interpreter', sign: int = 1) -> None:
-        arg_0 = self.parser_object.args[0]
-        arg_1 = self.parser_object.args[1]
-        arg_2 = self.parser_object.args[2]
+        arg_0 = self.parser_object.operands[0]
+        arg_1 = self.parser_object.operands[1]
+        arg_2 = self.parser_object.operands[2]
         val = self.env.get_value_of(arg_0)
         val += self.env.get_value_of(arg_1) * sign
         if arg_2[0] != ParserArgType.REGISTER:
@@ -259,8 +309,8 @@ class Interpreter():
         self.env.last_value = val
     
     def command_NOT(self: 'Interpreter') -> None:
-        arg_0 = self.parser_object.args[0]
-        arg_1 = self.parser_object.args[1]
+        arg_0 = self.parser_object.operands[0]
+        arg_1 = self.parser_object.operands[1]
         val = ~self.env.get_value_of(arg_0)
         if arg_1[0] != ParserArgType.REGISTER:
             raise Exception('Expected a register to return the value into.')
@@ -270,7 +320,7 @@ class Interpreter():
         self.env.last_value = val
     
     def command_BR(self: 'Interpreter') -> int:
-        arg_0 = self.parser_object.args[0]
+        arg_0 = self.parser_object.operands[0]
         if arg_0[0] != ParserArgType.LABEL or not arg_0[1] in LABELS:
             raise Exception('Expected a label to go to!')
         return self.env.labels[arg_0[1]]
@@ -290,9 +340,9 @@ class Interpreter():
         self.command_ADD(-1)
     
     def interpret(self: 'Interpreter') -> int|None:
-        if self.parser_object.command == '':
+        if self.parser_object.opcode == '':
             return
-        return getattr(self, f'command_{self.parser_object.command}', 'command_void')()
+        return getattr(self, f'command_{self.parser_object.opcode}', 'command_void')()
     
     def register(self: 'Interpreter', line: ParserObject) -> None:
         self.env.add_line(line)
