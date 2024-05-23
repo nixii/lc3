@@ -151,19 +151,17 @@ class ParserObject():
         onames = operands_token[1].split(',')
 
         for operand in onames:
-            match operand[0]:
-                case 'R':
-                    operands.append((ParserArgType.REGISTER, operand[1:]))
-                case 'x':
-                    operands.append((ParserArgType.NUMBER, int(operand, 16)))
-                case 'b':
-                    operands.append((ParserArgType.NUMBER, int(operand, 2)))
-                case '#':
-                    operands.append((ParserArgType.NUMBER, int(operand[1:], 10)))
-                case _:
-                    if operand in LABELS:
-                        operands.append((ParserArgType.LABEL, operand))
-        
+            if operand[0] == 'R' and operand[1:].isdigit():
+                operands.append((ParserArgType.REGISTER, operand[1:]))
+            elif operand[0] == 'x':
+                operands.append((ParserArgType.NUMBER, int(operand, 16)))
+            elif operand[0] == 'b':
+                operands.append((ParserArgType.NUMBER, int(operand, 2)))
+            elif operand[0] == '#':
+                operands.append((ParserArgType.NUMBER, int(operand[1:], 10)))
+            else:
+                operands.append((ParserArgType.LABEL, operand))
+    
         return operands
     
     def load_commands(self: 'ParserObject') -> None:
@@ -175,7 +173,6 @@ class ParserObject():
         err = None
 
         # For each token
-        print(self.tokens)
         for token in self.tokens:
             # TODO : Make the errors descriptive
 
@@ -331,7 +328,7 @@ class Interpreter():
         if self.env.last_value < 0:
             return self.command_BR()
     def command_BRz(self: 'Interpreter') -> int|None:
-        # print(self.env.last_value)
+        print(self.env.last_value)
         if self.env.last_value == 0:
             return self.command_BR()
         
@@ -339,7 +336,7 @@ class Interpreter():
         self.command_ADD(-1)
     
     def interpret(self: 'Interpreter') -> int|None:
-        if self.parser_object.opcode == '':
+        if self.parser_object.opcode == None:
             return
         return getattr(self, f'command_{self.parser_object.opcode}', 'command_void')()
     
@@ -363,7 +360,6 @@ def reg_run(t: str, l: Lexer, p: Parser, i: Interpreter) -> None:
     po, error = p.parse()
     if error is not None:
         raise Exception(error)
-    print(po)
     
     # Interpreterification
     i.register(po)
@@ -374,8 +370,10 @@ def run(l: Lexer, p: Parser, i: Interpreter) -> None:
         line = i.env.lines[j]
         i.set_parser_object(line)
         res = i.interpret()
-        j = j if res is None else res
-        j += 1
+        if res:
+            j = res
+        else:
+            j += 1
 
 def main() -> None:
 
@@ -390,7 +388,6 @@ def main() -> None:
             lines = filter(lambda x: x != '' and not x.isspace() and x != '\n' and x[0] != ';', lines)
             for line in lines:
                 reg_run(line, l, p, i)
-            print(i.env.lines)
             run(l, p, i)
     print(i.env.registers)
 

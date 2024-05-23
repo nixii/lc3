@@ -1,6 +1,7 @@
-     ADD R6,#10,R6     ; The loop will run 10 times
-LOOP SUB R6,#1,R6 ; Decrement the loop
-     BRz END           ; Break out of the loop
-     BR  LOOP           ; Run the loop
-END  ADD R6,#1,R6  ; Add one to R6 becasue why not
-     ADD R6,#1,R6      ; Add one to R6 becasue why not
+     ADD R6,#10,R6
+LOOP
+     SUB R6,#1,R6
+     BRz END
+     BR  LOOP
+END
+     ADD R6,#1,R6
