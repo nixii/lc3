@@ -1,0 +1,22 @@
+; Simple remainder/modulo calculator
+; Calcualtes R0 % R1
+
+; R followed by some number is a register, and it stores a number.
+; # followed by some number is a base 10 number.
+; BRn goes to the label specified if the last operation resulted in a negative number.
+; BR goes to the label specified no matter what.
+; MODULO and POS are both labels; they just point to a part of the code
+
+; Set the values
+ADD R0,#10,R0
+ADD R1,#5,R1
+
+MODULO
+        SUB R0,R1,R0 ; Subtract the divisor
+        BRn POS      ; If it's negative, go to the label POS
+        BR MODULO    ; Go back to the label MODULO
+POS
+        ADD R9,R1,R9 ; Add to the result register the divisor
+        ADD R9,R0,R9 ; Add to the result register the quotient calculated (it is negative, so this is subtraction)
+        SUB R1,R1,R1 ; Reset R1
+        SUB R0,R0,R0 ; Reset R0

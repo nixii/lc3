@@ -1,7 +1,0 @@
-     ADD R6,#10,R6
-LOOP
-     SUB R6,#1,R6
-     BRz END
-     BR  LOOP
-END
-     ADD R6,#1,R6

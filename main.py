@@ -63,7 +63,7 @@ class Lexer():
         self.advance()
 
         # While it is one identifier
-        while not self.current_character.isspace() and not self.current_character == '':
+        while not self.current_character.isspace() and self.current_character != '':
             iden += self.current_character
             self.advance()
         
@@ -328,7 +328,6 @@ class Interpreter():
         if self.env.last_value < 0:
             return self.command_BR()
     def command_BRz(self: 'Interpreter') -> int|None:
-        print(self.env.last_value)
         if self.env.last_value == 0:
             return self.command_BR()
         
@@ -348,8 +347,9 @@ MAIN
 
 Run the program.
 '''
-
 def reg_run(t: str, l: Lexer, p: Parser, i: Interpreter) -> None:
+
+    # Tokenization
     l.set_text(t)
     tokens, error = l.lex()
     if error is not None:
@@ -389,7 +389,7 @@ def main() -> None:
             for line in lines:
                 reg_run(line, l, p, i)
             run(l, p, i)
-    print(i.env.registers)
+    print(f'Result: {i.env.registers['R9']}')
 
 '''
 RUN

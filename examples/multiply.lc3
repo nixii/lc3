@@ -1,0 +1,18 @@
+; Simple multiplyier
+; Multiplies R0 and R1
+
+; R followed by some number is a register, and it stores a number.
+; # followed by some number is a base 10 number.
+; BRz goes to the label specified if the last operation resulted in a 0.
+; BR goes to the label specified no matter what.
+; MULT and END are both labels; they just point to a part of the code
+
+        ADD R0,#10,R0
+        ADD R1,#5,R1
+MULT                  ; This label multiplies
+        ADD R9,R0,R9  ; Add a multiple
+        SUB R1,#1,R1  ; Remove a time
+        BRz END       ; If it was all of them, end
+        BR  MULT      ; Continue the loop otherwise
+END                   ; The end of the loop
+        SUB R0,#10,R0 ; Reset R0
