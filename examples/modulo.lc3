@@ -8,8 +8,8 @@
 ; MODULO and POS are both labels; they just point to a part of the code
 
 ; Set the values
-ADD R0,#10,R0
-ADD R1,#5,R1
+        ADD R0,#10,R0
+        ADD R1,#5,R1
 
 MODULO
         SUB R0,R1,R0 ; Subtract the divisor
